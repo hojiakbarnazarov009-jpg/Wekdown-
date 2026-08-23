@@ -21,10 +21,10 @@ def keep_alive():
     t = Thread(target=run)
     t.start()
 
-# 2. BOTNING ASLIY SOZLAMALARI
-API_TOKEN = '8800926785:AAF3pqOjlD6GrX9HzmhLLieQRNisdU6NpmY'
+# 2. BOTNING ASLIY SOZLAMALARI (YANGI TOKEN BILAN)
+API_TOKEN = '8800926785:AAE-PWSLXEJs7CW2k4fGJ7YTt43I_6SPvrI'
 RAPIDAPI_KEY = '2d5de4329amsh1ba00ea6d291406p1b9423jsncc55e2274a4a'
-CHANNEL_USERNAME = '@uzbek_Ai_m'  # Majburiy kanal (Bot bu kanalda admin bo'lishi shart!)
+CHANNEL_USERNAME = '@uzbek_Ai_m'  # Majburiy kanal
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
@@ -39,7 +39,6 @@ async def check_subscription(user_id: int) -> bool:
         return False
     except Exception as e:
         logging.error(f"Kanalni tekshirishda xatolik: {e}")
-        # Agar bot kanalda admin bo'lmasa, hamma uchun bot to'xtab qolmasligi uchun True qaytaramiz
         return True
 
 def get_subscription_keyboard():
@@ -58,7 +57,7 @@ async def send_welcome(message: types.Message):
         await message.reply(f"Salom! Botdan foydalanish uchun avval kanalimizga a'zo bo'ling:", reply_markup=get_subscription_keyboard())
         return
         
-    await message.reply("Salom! Men 'Fast download bot'man. Menga Instagram yoki YouTube havola yuboring.")
+    await message.reply("Salom! Men 'Fast download bot'man. Menga Instagram, TikTok yoki YouTube havola yuboring.")
 
 @dp.callback_query_handler(text="check_sub")
 async def callback_check(call: types.CallbackQuery):
@@ -74,7 +73,6 @@ async def handle_video_download(message: types.Message):
     user_id = message.from_user.id
     url = message.text
     
-    # Kanal a'zoligini majburiy tekshirish
     if not await check_subscription(user_id):
         await message.reply("Botdan foydalanish uchun avval kanalimizga a'zo bo'ling:", reply_markup=get_subscription_keyboard())
         return
@@ -82,7 +80,6 @@ async def handle_video_download(message: types.Message):
     if "instagram.com" in url or "youtube.com" in url or "youtu.be" in url or "tiktok.com" in url:
         msg = await message.answer("Sizning so'rovingiz qabul qilindi, video yuklanmoqda... ⏳")
         
-        # RapidAPI sozlamalari
         api_url = "https://rapidapi.com"
         querystring = {"url": url}
         headers = {
@@ -91,18 +88,16 @@ async def handle_video_download(message: types.Message):
         }
 
         try:
-            # GET so'rovi orqali havolani API'ga yuboramiz
             response = requests.get(api_url, headers=headers, params=querystring, timeout=30)
             
             if response.status_code == 200:
                 data = response.json()
-                
-                # API qaytargan JSON ichidan video havolasini qidiramiz
                 video_url = None
+                
                 if "url" in data:
                     video_url = data["url"]
                 elif "links" in data and len(data["links"]) > 0:
-                    video_url = data["links"][0].get("url")
+                    video_url = data["links"].get("url")
                 
                 if video_url:
                     await bot.send_chat_action(message.chat.id, 'upload_video')
@@ -120,4 +115,5 @@ async def handle_video_download(message: types.Message):
 
 if __name__ == '__main__':
     keep_alive()
+    # Eski so'rovlar chalkashib ketmasligi uchun ularni mutloq tozalab yuboramiz
     executor.start_polling(dp, skip_updates=True)
